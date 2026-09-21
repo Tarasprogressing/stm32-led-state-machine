@@ -2,6 +2,7 @@
 #define LED_H
 
 #include "main.h"
+#include "stm32f3xx_hal.h"
 
 typedef struct{
 GPIO_TypeDef* GPIO_Port;

@@ -33,6 +33,8 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 #define DEBOUNCE_TIME 30
+#define LONG_PRESS_TIME 1000
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -47,6 +49,9 @@ UART_HandleTypeDef huart2;
 uint8_t previousState = 0;
 uint8_t currentState = 0;
 uint8_t ledMode = 0;
+uint32_t pressTime = 0;
+uint32_t releaseTime = 0;
+uint32_t pressDuration = 0;
 
 /* USER CODE END PV */
 
@@ -98,6 +103,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   LED_Init(&led, GPIOC, GPIO_PIN_10);
+  currentState = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11);
+  previousState = currentState;
+
+
 
   /* USER CODE END 2 */
 
@@ -107,9 +116,9 @@ int main(void)
   {
 	  LED_Update(&led);
 
-	   previousState = currentState;
-
+	  previousState = currentState;
 	  currentState = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11);
+
 
 	  if(previousState && !currentState)
 	  {
@@ -118,35 +127,39 @@ int main(void)
 		  HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11);
 		  currentState = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11);
 
-		  if(ledMode == 0)
+		  if(!currentState)
 		  {
-			  LED_BlinkStart(&led, 100);
-			  ledMode = 1;
-		  }
-		  else if(ledMode == 1)
-		  {
-			  LED_BlinkStop(&led);
-			  LED_On(&led);
-			  ledMode = 2;
-		  }
-		  else if(ledMode == 2)
-		  {
-			  LED_BlinkStop(&led);
-			  LED_Off(&led);
-			  ledMode = 3;
-		  }
-		  else if(ledMode == 3)
-		  {
-			  LED_BlinkStart(&led, 1000);
-			  ledMode = 0;
-		  }
-		  else
-		  {
-			  ledMode = 0;
+		  pressTime = HAL_GetTick();
 		  }
 	  }
 
+		  if(!previousState && currentState)
+		  {
 
+			  HAL_Delay(DEBOUNCE_TIME);
+
+			  currentState = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11);
+
+			  if(currentState)
+			  {
+
+			  releaseTime = HAL_GetTick();
+
+			  pressDuration = releaseTime - pressTime;
+
+			  }
+
+
+		  if(pressDuration < LONG_PRESS_TIME)
+		  {
+			  LED_On(&led);
+		  }
+
+		  else
+		  {
+			  LED_Off(&led);
+		  }
+		  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
