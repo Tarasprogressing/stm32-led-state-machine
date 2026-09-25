@@ -49,6 +49,7 @@ UART_HandleTypeDef huart2;
 uint8_t previousState = 0;
 uint8_t currentState = 0;
 uint8_t ledMode = 0;
+uint8_t previousMode = 255;
 uint32_t pressTime = 0;
 uint32_t releaseTime = 0;
 uint32_t pressDuration = 0;
@@ -124,7 +125,6 @@ int main(void)
 	  {
 		  HAL_Delay(DEBOUNCE_TIME);
 
-		  HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11);
 		  currentState = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11);
 
 		  if(!currentState)
@@ -152,14 +152,47 @@ int main(void)
 
 		  if(pressDuration < LONG_PRESS_TIME)
 		  {
-			  LED_On(&led);
+			  ledMode++;
+
+			  if(ledMode > 3)
+			  {
+				  ledMode = 0;
+			  }
 		  }
 
 		  else
 		  {
+			  ledMode = 0;
+		  }
+		  }
+
+  if(ledMode != previousMode)
+  {
+	  previousMode = ledMode;
+
+		  if(ledMode == 0)
+		  {
+			  LED_BlinkStart(&led, 100);
+		  }
+
+		  else if(ledMode == 1)
+		  {
+			  LED_BlinkStop(&led);
+			  LED_On(&led);
+		  }
+
+		  else if (ledMode == 2)
+		  {
+			  LED_BlinkStop(&led);
 			  LED_Off(&led);
 		  }
-		  }
+
+		  else if (ledMode == 3)
+			  {
+			    LED_BlinkStart(&led, 1000);
+			  }
+  }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
