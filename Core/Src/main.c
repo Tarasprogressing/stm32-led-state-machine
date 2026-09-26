@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "LED.h"
+#include <string.h>
 
 /* USER CODE END Includes */
 
@@ -60,6 +61,10 @@ uint32_t pressDuration = 0;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
+void uart_send(char *msg)
+	{
+	HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+	}
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -102,7 +107,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  uart_send("STM32 started\r\n");
   LED_Init(&led, GPIOC, GPIO_PIN_10);
   currentState = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11);
   previousState = currentState;
@@ -173,23 +178,27 @@ int main(void)
 		  if(ledMode == 0)
 		  {
 			  LED_BlinkStart(&led, 100);
+			  uart_send("Mode 0\r\n");
 		  }
 
 		  else if(ledMode == 1)
 		  {
 			  LED_BlinkStop(&led);
 			  LED_On(&led);
+			  uart_send("Mode 1\r\n");
 		  }
 
 		  else if (ledMode == 2)
 		  {
 			  LED_BlinkStop(&led);
 			  LED_Off(&led);
+			  uart_send("Mode 2\r\n");
 		  }
 
 		  else if (ledMode == 3)
 			  {
 			    LED_BlinkStart(&led, 1000);
+			    uart_send("Mode 3\r\n");
 			  }
   }
 
@@ -262,7 +271,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 38400;
+  huart2.Init.BaudRate = 9600;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;

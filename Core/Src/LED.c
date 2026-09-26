@@ -1,6 +1,5 @@
 #include "LED.h"
 
-#define LED_H
 
 void LED_Init(LED_Handle* led, GPIO_TypeDef* port, uint16_t pin)
 	{
