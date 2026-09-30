@@ -23,6 +23,8 @@
 /* USER CODE BEGIN Includes */
 #include "LED.h"
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /* USER CODE END Includes */
 
@@ -54,6 +56,9 @@ uint8_t previousMode = 255;
 uint32_t pressTime = 0;
 uint32_t releaseTime = 0;
 uint32_t pressDuration = 0;
+uint8_t rx;
+char buffer[32];
+uint8_t idx = 0;
 
 /* USER CODE END PV */
 
@@ -61,17 +66,17 @@ uint32_t pressDuration = 0;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-void uart_send(char *msg)
-	{
-	HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-	}
+void uart_send(char *msg);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+void uart_send(char *msg)
+  {
+  HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+  }
 /* USER CODE END 0 */
 
 /**
@@ -83,7 +88,6 @@ int main(void)
 
   /* USER CODE BEGIN 1 */
 	LED_Handle led;
-
 
   /* USER CODE END 1 */
 
@@ -107,7 +111,8 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  uart_send("STM32 started\r\n");
+  HAL_UART_Receive_IT(&huart2, &rx, 1);
+
   LED_Init(&led, GPIOC, GPIO_PIN_10);
   currentState = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11);
   previousState = currentState;
@@ -202,6 +207,29 @@ int main(void)
 			  }
   }
 
+  /*if(HAL_UART_Receive(&huart2, &rx, 1, 10) == HAL_OK)
+  	  {
+  		 HAL_UART_Transmit(&huart2, &rx, 1, 10);
+
+  		 if(rx == '\r' || rx == '\n')
+  		{
+  		  buffer[idx] = 0;
+  		  uart_send("CMD: ");
+  		  uart_send(buffer);
+  		  uart_send("\r\n");
+  		  Command_processor(buffer);
+  		  idx = 0;
+  		  buffer[0] = 0;
+  	      }
+  	  else
+  	  {
+  		  if(idx < sizeof(buffer) - 1)
+  		  {
+  			  buffer[idx++] = rx;
+  		  }
+  	  }
+  	  }*/
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -271,7 +299,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 9600;
+  huart2.Init.BaudRate = 38400;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -346,6 +374,36 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+	{
+	if(huart->Instance == USART2)
+	{
+		HAL_UART_Transmit(&huart2, &rx, 1, 10);
+
+		if(rx == '\r' || rx == '\n')
+		{
+			buffer[idx] = '\0';
+
+			uart_send("\r\nCMD: ");
+			uart_send(buffer);
+			uart_send("\r\n");
+
+			idx = 0;
+			buffer[0] = '\0';
+		}
+		else
+		{
+			if(idx < sizeof(buffer) - 1)
+			{
+				buffer[idx++] = rx;
+			}
+		}
+
+		HAL_UART_Receive_IT(&huart2, &rx, 1);
+	}
+}
 
 /* USER CODE END 4 */
 
