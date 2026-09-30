@@ -67,6 +67,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 void uart_send(char *msg);
+void CommandProcessor(char *cmd);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -77,6 +78,27 @@ void uart_send(char *msg)
   {
   HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
   }
+
+void CommandProcessor(char *cmd)
+	{
+	if(strcmp(buffer, "mode 0") == 0)
+				{
+					ledMode = 0;
+				}
+	else if(strcmp(buffer, "mode 1") == 0)
+				{
+					ledMode = 1;
+				}
+	else if(strcmp(buffer, "mode 2") == 0)
+				{
+					ledMode = 2;
+				}
+	else if(strcmp(buffer, "mode 3") == 0)
+				{
+					ledMode = 3;
+				}
+	}
+
 /* USER CODE END 0 */
 
 /**
@@ -217,7 +239,7 @@ int main(void)
   		  uart_send("CMD: ");
   		  uart_send(buffer);
   		  uart_send("\r\n");
-  		  Command_processor(buffer);
+  		  CommandProcessor(buffer);
   		  idx = 0;
   		  buffer[0] = 0;
   	      }
@@ -385,6 +407,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		if(rx == '\r' || rx == '\n')
 		{
 			buffer[idx] = '\0';
+
+			CommandProcessor(buffer);
 
 			uart_send("\r\nCMD: ");
 			uart_send(buffer);
