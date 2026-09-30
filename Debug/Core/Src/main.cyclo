@@ -1,8 +1,6 @@
-../Core/Src/main.c:77:6:uart_send	1
-../Core/Src/main.c:82:6:CommandProcessor	12
-../Core/Src/main.c:151:5:main	14
-../Core/Src/main.c:309:6:SystemClock_Config	4
-../Core/Src/main.c:356:13:MX_USART2_UART_Init	2
-../Core/Src/main.c:391:13:MX_GPIO_Init	1
-../Core/Src/main.c:444:6:HAL_UART_RxCpltCallback	5
-../Core/Src/main.c:481:6:Error_Handler	1
+../Core/Src/main.c:84:5:main	14
+../Core/Src/main.c:242:6:SystemClock_Config	4
+../Core/Src/main.c:289:13:MX_USART2_UART_Init	2
+../Core/Src/main.c:324:13:MX_GPIO_Init	1
+../Core/Src/main.c:377:6:HAL_UART_RxCpltCallback	5
+../Core/Src/main.c:414:6:Error_Handler	1
