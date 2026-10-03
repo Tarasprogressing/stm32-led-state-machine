@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "cli.h"
+#include "button.h"
 
 /* USER CODE END Includes */
 
@@ -50,13 +51,9 @@
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-uint8_t previousState = 0;
-uint8_t currentState = 0;
+
 uint8_t ledMode = 0;
 uint8_t previousMode = 255;
-uint32_t pressTime = 0;
-uint32_t releaseTime = 0;
-uint32_t pressDuration = 0;
 uint8_t rx;
 char buffer[32];
 uint8_t idx = 0;
@@ -87,6 +84,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 	LED_Handle led;
 
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -109,13 +107,12 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+
+  Button_Init(GPIOC, GPIO_PIN_11);
+
   HAL_UART_Receive_IT(&huart2, &rx, 1);
 
   LED_Init(&led, GPIOC, GPIO_PIN_10);
-  currentState = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11);
-  previousState = currentState;
-
-
 
   /* USER CODE END 2 */
 
@@ -125,54 +122,26 @@ int main(void)
   {
 	  LED_Update(&led);
 
-	  previousState = currentState;
-	  currentState = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11);
+	  Button_Update();
 
+	  ButtonEvent_t event = Button_GetEvent();
 
-	  if(previousState && !currentState)
-	  {
-		  HAL_Delay(DEBOUNCE_TIME);
-
-		  currentState = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11);
-
-		  if(!currentState)
-		  {
-		  pressTime = HAL_GetTick();
-		  }
-	  }
-
-		  if(!previousState && currentState)
-		  {
-
-			  HAL_Delay(DEBOUNCE_TIME);
-
-			  currentState = HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_11);
-
-			  if(currentState)
+			  if(event == BUTTON_EVENT_SHORT_PRESS)
 			  {
+				  ledMode++;
 
-			  releaseTime = HAL_GetTick();
-
-			  pressDuration = releaseTime - pressTime;
+				  if(ledMode > 3)
+				  {
+					  ledMode = 0;
+				  }
 
 			  }
 
-
-		  if(pressDuration < LONG_PRESS_TIME)
-		  {
-			  ledMode++;
-
-			  if(ledMode > 3)
+			  else if(event == BUTTON_EVENT_LONG_PRESS)
 			  {
 				  ledMode = 0;
 			  }
-		  }
 
-		  else
-		  {
-			  ledMode = 0;
-		  }
-		  }
 
   if(ledMode != previousMode)
   {
@@ -203,8 +172,8 @@ int main(void)
 			    LED_BlinkStart(&led, 1000);
 			    uart_send("Mode 3\r\n");
 			  }
-  }
 
+  }
   /*if(HAL_UART_Receive(&huart2, &rx, 1, 10) == HAL_OK)
   	  {
   		 HAL_UART_Transmit(&huart2, &rx, 1, 10);
@@ -385,10 +354,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			buffer[idx] = '\0';
 
 			CommandProcessor(buffer);
-
-			uart_send("\r\nCMD: ");
-			uart_send(buffer);
-			uart_send("\r\n");
 
 			idx = 0;
 			buffer[0] = '\0';

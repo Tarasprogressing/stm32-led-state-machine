@@ -13,6 +13,7 @@ void uart_send(char *msg)
 
 void CommandProcessor(char *cmd)
 	{
+
 	if(strcmp(cmd, "mode 0") == 0)
 				{
 					ledMode = 0;
