@@ -55,6 +55,9 @@ UART_HandleTypeDef huart2;
 uint8_t ledMode = 0;
 uint8_t previousMode = 255;
 uint8_t rx;
+uint32_t blinkTarget = 0;
+uint32_t blinkCurrent = 0;
+uint32_t blinkDelay = 0;
 char buffer[32];
 uint8_t idx = 0;
 
@@ -130,7 +133,7 @@ int main(void)
 			  {
 				  ledMode++;
 
-				  if(ledMode > 3)
+				  if(ledMode > 4)
 				  {
 					  ledMode = 0;
 				  }
@@ -172,6 +175,34 @@ int main(void)
 			    LED_BlinkStart(&led, 1000);
 			    uart_send("Mode 3\r\n");
 			  }
+		  else if(ledMode == 4)
+		  {
+		  uart_send("ENTER MODE 4\r\n");
+
+		  char msg[64];
+
+		  sprintf(msg, "target=%lu delay=%lu\r\n", blinkTarget, blinkDelay);
+
+		  uart_send(msg);
+
+		  LED_BlinkStop(&led);
+
+		  for(uint32_t i = 0; i < blinkTarget; i++)
+		  {
+		  uart_send("ON\r\n");
+
+		  LED_On(&led);
+
+		  HAL_Delay(blinkDelay);
+
+		  uart_send("OFF\r\n");
+
+		  LED_Off(&led);
+
+		  HAL_Delay(blinkDelay);
+		  }
+		  ledMode = 2;
+		  }
 
   }
 

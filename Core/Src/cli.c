@@ -6,6 +6,10 @@
 
 extern UART_HandleTypeDef huart2;
 extern uint8_t ledMode;
+extern uint32_t blinkTarget;
+extern uint32_t blinkCurrent;
+extern uint32_t blinkDelay;
+
 
 void uart_send(char *msg)
   {
@@ -31,6 +35,10 @@ void CommandProcessor(char *cmd)
 				{
 					ledMode = 3;
 				}
+	else if(strcmp(cmd, "mode 4") == 0)
+			{
+				ledMode = 4;
+			}
 	else if(strcmp(cmd, "help") == 0)
 	{
 		uart_send(
@@ -44,10 +52,10 @@ void CommandProcessor(char *cmd)
 				"blink N DELALY");
 	}
 
-	else if(strcmp(cmd, "status") == 0)
+	 else if(strcmp(cmd, "status") == 0)
 	{
 		char msg[64];
-		sprintf(msg, "\r\nCurrent mode: %d\r\n" "UART: Interrupt mode\r\n" "Baudrate: 38400\r\n", ledMode);
+		sprintf(msg, "\r\nCurrent mode: %d\r\n" "UART: Interrupt mode\r\n" "Baud rate: 38400\r\n", ledMode);
 
 		uart_send(msg);
 	}
@@ -71,109 +79,52 @@ void CommandProcessor(char *cmd)
 					uart_send("Current mode: 3 \r\n");
 				}
 	}
-	else if(strncmp(cmd, "blink", 5) == 0)
+	else if(ledMode == 4)
 	{
-		// шукаємо перший пробіл після "блінк"
+	uart_send("ENTER MODE 4\r\n");
+	char msg[64];
 
-		char *space1 = strchr(cmd, ' ');
-		if(space1 == NULL)
-		{
-			uart_send("error: missing parameters\r\n");
-			return;
-		}
+	sprintf(msg, "target=%lu delay=%lu\r\n", blinkTarget, blinkDelay);
 
-		// перший аргумент (кількість блимів)
-		char *arg1 = space1 + 1;
-		while(*arg1 == ' ')
-		{
-			arg1++;
-		}
-
-		if(*arg1 == '\0')
-		{
-			uart_send("error: missing first parameter \r\n");
-			return;
-		}
-
-		// шукаємопробіл між першим і другим параметром
-
-		char *space2 = strchr(arg1, ' ');
-		if(space2 == NULL)
-		{
-			uart_send("error: missing second parameter\r\n");
-			return;
-		}
-
-		*space2 = '\0';
-
-		// другий аргумент (затримка)
-
-		char *arg2 = space2 + 1;
-		while(*arg2 == ' ')
-		{
-			arg2++;
-		}
-
-		if(*arg2 == '\0')
-		{
-			uart_send("error: missing second parameter\r\n");
-			return;
-		}
-
-		// перевірка, що перший параметр - тільки цифри
-		for(int i = 0; arg1[i] != '\0'; i++)
-		{
-
-		if(arg1[i] < '0' || arg1[i] > '9')
-		{
-			uart_send("error: invalid the first number\r\n");
-			return;
-		}
-		}
-
-		// перевірка, що другий параметр - тільки цифри
-
-		for(int i = 0; arg2[i] != '\0'; i++)
-				{
-
-				if(arg2[i] < '0' || arg2[i] > '9')
-				{
-					uart_send("error: invalid the second number\r\n");
-					return;
-				}
-				}
-
-		int cnt = atoi(arg1);
-		int delay = atoi(arg2);
-
-		if(cnt < 1 || cnt > 5)
-		{
-			uart_send("error: count is out of range\r\n");
-			return;
-		}
-
-		if(delay < 10 || delay > 2000)
-		{
-			uart_send("error: delay is out of range\r\n");
-			return;
-		}
-
-		for(int blk = 0; blk < cnt; blk++)
-		{
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, GPIO_PIN_SET);
-			HAL_Delay(delay);
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, GPIO_PIN_RESET);
-			HAL_Delay(delay);
-
-			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_10, GPIO_PIN_RESET);
-		}
-
-		uart_send("Blink is done\r\n");
+	uart_send(msg);
 	}
 
-	else
+	else if(strncmp(cmd, "blink ", 6) == 0)
 	{
-		uart_send("\r\nUnknown command\r\n");
+	char *arg1;
+	char *arg2;
+
+	arg1 = strtok(cmd + 6, " ");
+	arg2 = strtok(NULL, " ");
+
+	if(arg1 == NULL || arg2 == NULL)
+	{
+	uart_send("Usage: blink N DELAY\r\n");
+	return;
+	}
+
+	int cnt = atoi(arg1);
+	int delay = atoi(arg2);
+
+	if(cnt < 1 || cnt > 10)
+	{
+	uart_send("Error: invalid count\r\n");
+	return;
+	}
+
+	if(delay < 10 || delay > 5000)
+	{
+	uart_send("Error: invalid delay\r\n");
+	return;
+	}
+
+	blinkTarget = cnt;
+	blinkCurrent = 0;
+	blinkDelay = delay;
+
+	ledMode = 4;
+
+	uart_send("Blink mode started\r\n");
 	}
 	}
 
