@@ -174,28 +174,7 @@ int main(void)
 			  }
 
   }
-  /*if(HAL_UART_Receive(&huart2, &rx, 1, 10) == HAL_OK)
-  	  {
-  		 HAL_UART_Transmit(&huart2, &rx, 1, 10);
 
-  		 if(rx == '\r' || rx == '\n')
-  		{
-  		  buffer[idx] = 0;
-  		  uart_send("CMD: ");
-  		  uart_send(buffer);
-  		  uart_send("\r\n");
-  		  CommandProcessor(buffer);
-  		  idx = 0;
-  		  buffer[0] = 0;
-  	      }
-  	  else
-  	  {
-  		  if(idx < sizeof(buffer) - 1)
-  		  {
-  			  buffer[idx++] = rx;
-  		  }
-  	  }
-  	  }*/
 
     /* USER CODE END WHILE */
 
